@@ -22,6 +22,9 @@ void echo(char* input, char* output);
 void call_func_by_string(char* functionName, char* input, char* output);
 void ls(char* input, char* output);
 void cd(char* input, char* output);
+void pwd();
+void cp(char* input, char* output);
+
 
 
 void parse_arguments(char* input, char** commands, int* numOfCommands) {
@@ -95,6 +98,14 @@ void evaluate_command(char** commands, char* command, int numOfCommands){
             cd(commands[1], NULL);
         } 
     }
+    else if(strcmp(command, "pwd") == 0){
+        pwd();
+    }
+
+    else if(strcmp(command, "cp") == 0){
+        if(numOfCommands != 3){return;}
+        cp(commands[1], commands[2]);
+    }
 
     else{
         printf("Command not found\n");
@@ -155,6 +166,46 @@ void ls(char* input, char* output){
 
 void cd(char* input, char* output){
     chdir(input);
+}
+
+void pwd(){
+    char cwd[PATH_MAX];
+    if (getcwd(cwd, sizeof(cwd)) != NULL) {
+        printf("\n%s\n\n", cwd);
+    }
+}
+
+void cp(char* input, char* output){
+    FILE *fptr1, *fptr2;
+    char filename[100], c;
+  
+    // Open one file for reading
+    fptr1 = fopen(input, "r");
+    if (fptr1 == NULL)
+    {
+        printf("Cannot open file %s \n", input);
+        exit(0);
+    }
+  
+    // Open another file for writing
+    fptr2 = fopen(output, "w");
+    if (fptr2 == NULL)
+    {
+        printf("Cannot open file %s \n", output);
+        exit(0);
+    }
+  
+    // Read contents from file
+    c = fgetc(fptr1);
+    while (c != EOF)
+    {
+        fputc(c, fptr2);
+        c = fgetc(fptr1);
+    }
+  
+    fclose(fptr1);
+    fclose(fptr2);
+    return;
 }
 
 void print_file_contents(char* filename){
