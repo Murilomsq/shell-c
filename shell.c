@@ -11,20 +11,20 @@
 #define MAX_COMMANDS 5
 #define MAX_COMMAND_CHARACTERS 50
 
-
-void cat(char* input, char* output);
 void parse_arguments(char* input, char** commands, int* numOfCommands);
 void evaluate_command(char** commands, char* command, int numOfCommands);
 void command_handler(char** commands, int numOfCommands);
-void cat(char* input, char* output);
 void print_file_contents(char* filename);
-void echo(char* input, char* output);
 void call_func_by_string(char* functionName, char* input, char* output);
+void cat(char* input, char* output);
+void echo(char* input, char* output);
 void ls(char* input, char* output);
 void cd(char* input, char* output);
 void pwd();
 void cp(char* input, char* output);
-
+void rm(char* input);
+void custom_mkdir(char* input);
+void custom_rmdir(char* input);
 
 
 void parse_arguments(char* input, char** commands, int* numOfCommands) {
@@ -98,15 +98,35 @@ void evaluate_command(char** commands, char* command, int numOfCommands){
             cd(commands[1], NULL);
         } 
     }
+
+    // PWD COMMAND
     else if(strcmp(command, "pwd") == 0){
         pwd();
     }
 
+    // CP COMMAND
     else if(strcmp(command, "cp") == 0){
         if(numOfCommands != 3){return;}
         cp(commands[1], commands[2]);
     }
 
+    // RM COMMAND
+    else if(strcmp(command, "rm") == 0){
+        if(numOfCommands != 2){return;}
+        rm(commands[1]);
+    }
+    
+    // MKDIR COMMAND
+    else if(strcmp(command, "mkdir") == 0){
+        if(numOfCommands != 2){return;}
+        custom_mkdir(commands[1]);
+    }
+
+    // RMDIR COMMAND
+    else if(strcmp(command, "rmdir") == 0){
+        if(numOfCommands != 2){return;}
+        custom_rmdir(commands[1]);
+    }
     else{
         printf("Command not found\n");
     }
@@ -174,6 +194,19 @@ void pwd(){
         printf("\n%s\n\n", cwd);
     }
 }
+void custom_mkdir(char* input) {
+
+    mode_t old_mask = umask(0);
+    if (!mkdir(input, 0775)){
+        printf("Folder created\n");
+        umask(old_mask);
+    }    
+    else {
+        printf("Unable to create folder\n");
+        umask(old_mask);
+        exit(1);
+    }
+ }
 
 void cp(char* input, char* output){
     FILE *fptr1, *fptr2;
@@ -206,6 +239,22 @@ void cp(char* input, char* output){
     fclose(fptr1);
     fclose(fptr2);
     return;
+}
+
+void rm(char* input){
+    if (remove(input) == 0) {
+        printf("File deleted successfully\n");
+    } else {
+        printf("File not found\n");
+    }
+}
+
+void custom_rmdir(char* input){
+    if (rmdir(input) == 0) {
+        printf("Directory deleted successfully\n");
+    } else {
+        printf("Directory not found\n");
+    }
 }
 
 void print_file_contents(char* filename){
@@ -244,6 +293,9 @@ int main(){
         scanf(" %20[^\n]", command); //Prevents overflow
         parse_arguments(command, commandParser, &numberOfCommands);
         evaluate_command(commandParser, commandParser[0], numberOfCommands);
+
+
+        //Creating a child process to read from stdin wont let you have a working directory specified
 
         /*pid = fork(); // fork a new process
         if (pid < 0) {
